@@ -1,32 +1,30 @@
-# PDF to Markdown Converter
+# PDF to Vector Converter
 
-A modern, user-friendly tool for converting PDF files to Markdown format. Built with Python and Tkinter.
-
-![Screenshot of the application](docs/screenshot.png)
+A modern tool for converting PDF files to vector embeddings for semantic search and RAG applications. Built with Python.
 
 ## Features
 
-- Convert PDF files to clean, readable Markdown
-- Modern GUI with progress indication
-- Background processing to keep UI responsive
-- Keyboard shortcuts for common actions
-- Monospace font support for better code readability
-- Error handling with user-friendly messages
+- Convert PDF files to vector embeddings
+- Automatic PDF processing with folder watching
+- Semantic search across processed documents
+- Question answering using document context
+- Persistent vector storage with ChromaDB
+- Modern CLI interface with rich output
 
 ## Installation
 
 ### From PyPI
 
 ```bash
-pip install pdf2md
+pip install pdf2vector
 ```
 
 ### From Source
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/yourusername/pdf2md.git
-   cd pdf2md
+   git clone https://github.com/yourusername/pdf2vector.git
+   cd pdf2vector
    ```
 
 2. Install in development mode:
@@ -36,51 +34,52 @@ pip install pdf2md
 
 ## Usage
 
-### GUI Mode
+### Watch Mode
 
-After installation, run the application:
+Watch a directory for new PDF files and process them automatically:
+
 ```bash
-pdf2md
+pdf2vector watch --input-dir input_pdfs --persist-dir .chroma
 ```
 
-Keyboard shortcuts:
-- `Ctrl+O`: Open PDF file
-- `Ctrl+R`: Convert to Markdown
-- `Ctrl+C`: Copy selected text
-- `Ctrl+A`: Select all text
+This will:
+1. Watch the `input_pdfs` directory for new PDF files
+2. Process any new PDFs automatically
+3. Store the vectors in the `.chroma` directory
+4. Allow you to ask questions about the processed documents
 
-### Command-line Usage
+### Process Single PDF
 
-Convert a PDF file directly from the command line:
+Process a single PDF file:
+
 ```bash
-pdf2md input.pdf --output output.md
+pdf2vector process input.pdf --input-dir input_pdfs --persist-dir .chroma
 ```
 
-## Example
+### Example Usage
 
-### Before (PDF)
-![Sample PDF](docs/sample_pdf.png)
+1. Start watching for PDFs:
+   ```bash
+   pdf2vector watch
+   ```
 
-### After (Markdown)
-```markdown
-# Sample PDF
+2. Drop a PDF file into the `input_pdfs` directory
 
-This is a sample PDF file with some text.
+3. Ask questions about the content:
+   ```
+   Enter your question: What are the main topics covered in the document?
+   ```
 
-## Section 1
-
-- Bullet point 1
-- Bullet point 2
-
-## Section 2
-
-Some code:
-
-```python
-def hello():
-    print("Hello, World!")
-```
-```
+4. Get answers with sources:
+   ```
+   Answer: Here are the relevant passages from the documents:
+   
+   Sources:
+   - document.pdf (Chunk 1)
+     The main topics covered in this document are...
+   - document.pdf (Chunk 2)
+     Additionally, the document discusses...
+   ```
 
 ## Development
 
