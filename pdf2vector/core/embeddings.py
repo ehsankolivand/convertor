@@ -1,120 +1,74 @@
 """
-Embeddings module for pdf2vector.
-
-This module handles generating embeddings using OpenAI's API with retry logic.
+Module for generating vector embeddings from text using a simple hash-based approach.
 """
 
 import logging
-import os
-from typing import List, Dict, Any
-import requests
-from requests.adapters import HTTPAdapter
-from urllib3.util.retry import Retry
-from dotenv import load_dotenv
+import hashlib
+import numpy as np
+from typing import List, Union
 
 logger = logging.getLogger(__name__)
 
-# Load environment variables
-load_dotenv()
-
-class EmbeddingError(Exception):
-    """Custom exception for embedding generation errors."""
-    pass
-
 class EmbeddingGenerator:
-    """Generates embeddings using OpenAI's API."""
+    """Generates embeddings for text using a simple hash-based method."""
     
-    def __init__(self, api_key: str = None):
-        """
-        Initialize the embedding generator.
+    def __init__(self, model_name: str = "simple-hash"):
+        """Initialize the embedding generator.
         
         Args:
-            api_key: OpenAI API key (defaults to OPENAI_API_KEY env var)
+            model_name: Name of the embedding model (default: simple-hash)
         """
-        self.api_key = api_key or os.getenv("OPENAI_API_KEY")
-        if not self.api_key:
-            raise ValueError("OpenAI API key not found. Set OPENAI_API_KEY environment variable.")
-            
-        # Configure retry strategy
-        retry_strategy = Retry(
-            total=3,
-            backoff_factor=1,
-            status_forcelist=[429, 500, 502, 503, 504],
-        )
+        self.model_name = model_name
+        self.dimension = 1536  # Same dimension as text-embedding-ada-002 for compatibility
         
-        # Create session with retry strategy
-        self.session = requests.Session()
-        self.session.mount("https://", HTTPAdapter(max_retries=retry_strategy))
-        
-    def generate_embedding(self, text: str) -> List[float]:
-        """
-        Generate embedding for a single text.
+    def embed_text(self, text: Union[str, List[str]]) -> Union[List[float], List[List[float]]]:
+        """Generate embeddings for the given text.
         
         Args:
-            text: Text to generate embedding for
+            text: Single string or list of strings to embed
             
         Returns:
-            List[float]: The generated embedding vector
-            
-        Raises:
-            EmbeddingError: If there's an error generating the embedding
+            List of embeddings as floats, or list of lists for multiple texts
         """
         try:
-            response = self.session.post(
-                "https://api.openai.com/v1/embeddings",
-                headers={
-                    "Authorization": f"Bearer {self.api_key}",
-                    "Content-Type": "application/json"
-                },
-                json={
-                    "model": "text-embedding-3-small",
-                    "input": text
-                }
-            )
+            if isinstance(text, str):
+                return self._generate_single_embedding(text)
+            elif isinstance(text, list):
+                return [self._generate_single_embedding(t) for t in text]
+            else:
+                raise ValueError(f"Unsupported input type: {type(text)}")
+                
+        except Exception as e:
+            logger.error(f"Error generating embeddings: {str(e)}")
+            raise
             
-            response.raise_for_status()
-            return response.json()["data"][0]["embedding"]
-            
-        except requests.exceptions.RequestException as e:
-            error_msg = f"Error generating embedding: {str(e)}"
-            logger.error(error_msg)
-            raise EmbeddingError(error_msg)
-            
-    def generate_embeddings(self, texts: List[str]) -> List[List[float]]:
-        """
-        Generate embeddings for multiple texts.
+    def _generate_single_embedding(self, text: str) -> List[float]:
+        """Generate embedding for a single text string using hash-based approach.
         
         Args:
-            texts: List of texts to generate embeddings for
+            text: Text string to embed
             
         Returns:
-            List[List[float]]: List of embedding vectors
-            
-        Raises:
-            EmbeddingError: If there's an error generating the embeddings
+            List of floats representing the embedding
         """
-        try:
-            response = self.session.post(
-                "https://api.openai.com/v1/embeddings",
-                headers={
-                    "Authorization": f"Bearer {self.api_key}",
-                    "Content-Type": "application/json"
-                },
-                json={
-                    "model": "text-embedding-3-small",
-                    "input": texts
-                }
-            )
+        # Initialize embedding vector
+        embedding = np.zeros(self.dimension)
+        
+        # Split text into words and hash each one
+        words = text.split()
+        for i, word in enumerate(words):
+            # Get hash of word
+            word_hash = int(hashlib.sha256(word.encode()).hexdigest(), 16)
             
-            response.raise_for_status()
-            return [item["embedding"] for item in response.json()["data"]]
+            # Use hash to set values in embedding vector
+            for j in range(min(32, self.dimension)):  # Use first 32 bytes of hash
+                idx = (word_hash + j) % self.dimension
+                val = ((word_hash >> j) & 0xFF) / 255.0  # Normalize to [0,1]
+                embedding[idx] = val
+                
+        # Normalize the embedding vector
+        norm = np.linalg.norm(embedding)
+        if norm > 0:
+            embedding = embedding / norm
             
-        except requests.exceptions.RequestException as e:
-            error_msg = f"Error generating embeddings: {str(e)}"
-            logger.error(error_msg)
-            raise EmbeddingError(error_msg)
-            
-    def __del__(self):
-        """Clean up resources."""
-        if hasattr(self, 'session'):
-            self.session.close() 
+        return embedding.tolist()

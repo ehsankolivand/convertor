@@ -32,16 +32,6 @@ app = typer.Typer(
     add_completion=False
 )
 
-def setup_environment(
-    openai_api_key: Optional[str] = None,
-    anthropic_api_key: Optional[str] = None
-):
-    """Set up environment variables from CLI arguments."""
-    if openai_api_key:
-        os.environ["OPENAI_API_KEY"] = openai_api_key
-    if anthropic_api_key:
-        os.environ["ANTHROPIC_API_KEY"] = anthropic_api_key
-
 @app.command()
 def watch(
     input_dir: str = typer.Option(
@@ -55,24 +45,10 @@ def watch(
         "--persist-dir",
         "-p",
         help="Directory to persist the vector store"
-    ),
-    openai_api_key: Optional[str] = typer.Option(
-        None,
-        "--openai-api-key",
-        "-o",
-        help="OpenAI API key (defaults to OPENAI_API_KEY env var)"
-    ),
-    anthropic_api_key: Optional[str] = typer.Option(
-        None,
-        "--anthropic-api-key",
-        "-a",
-        help="Anthropic API key (defaults to ANTHROPIC_API_KEY env var)"
     )
 ):
     """Watch a directory for PDF files and process them."""
     try:
-        setup_environment(openai_api_key, anthropic_api_key)
-        
         with Progress(
             SpinnerColumn(),
             TextColumn("[progress.description]{task.description}"),
@@ -113,6 +89,7 @@ def watch(
                         console.print(
                             f"- {source['filename']} (Chunk {source['chunk_index']})"
                         )
+                        console.print(f"  {source['text'][:200]}...")
                         
             except KeyboardInterrupt:
                 console.print("\n[yellow]Stopping PDF2Vector...[/yellow]")
@@ -135,24 +112,10 @@ def process(
         "--persist-dir",
         "-p",
         help="Directory to persist the vector store"
-    ),
-    openai_api_key: Optional[str] = typer.Option(
-        None,
-        "--openai-api-key",
-        "-o",
-        help="OpenAI API key (defaults to OPENAI_API_KEY env var)"
-    ),
-    anthropic_api_key: Optional[str] = typer.Option(
-        None,
-        "--anthropic-api-key",
-        "-a",
-        help="Anthropic API key (defaults to ANTHROPIC_API_KEY env var)"
     )
 ):
     """Process a single PDF file."""
     try:
-        setup_environment(openai_api_key, anthropic_api_key)
-        
         with Progress(
             SpinnerColumn(),
             TextColumn("[progress.description]{task.description}"),
