@@ -1,0 +1,5 @@
+markitdown>=0.1.1
+pdfminer.six>=20250416
+markdownify>=1.1.0
+coloredlogs>=15.0.1
+humanfriendly>=10.0
