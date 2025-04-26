@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import Optional
 
 from .converter import convert_pdf_to_markdown, ConversionError
+from . import __version__
 
 logger = logging.getLogger(__name__)
 
@@ -111,6 +112,11 @@ class PdfMarkdownApp:
         menubar.add_cascade(label="View", menu=view_menu)
         view_menu.add_command(label="Toggle Monospace Font", command=self.toggle_monospace_font)
         
+        # Help menu
+        help_menu = tk.Menu(menubar, tearoff=0)
+        menubar.add_cascade(label="Help", menu=help_menu)
+        help_menu.add_command(label="About", command=self.show_about)
+        
     def setup_keyboard_shortcuts(self):
         self.root.bind('<Control-o>', lambda e: self.select_file())
         self.root.bind('<Control-r>', lambda e: self.convert_file())
@@ -184,6 +190,14 @@ class PdfMarkdownApp:
                 
         self.current_future = self.executor.submit(conversion_task)
         self.current_future.add_done_callback(update_ui)
+        
+    def show_about(self):
+        """Display the About dialog with version information."""
+        about_text = f"PDF to Markdown Converter\nVersion {__version__}\n\n"
+        about_text += "A modern, user-friendly tool for converting PDF files to Markdown format.\n\n"
+        about_text += "© 2024 PDF to Markdown Converter"
+        
+        messagebox.showinfo("About", about_text)
         
     def __del__(self):
         self.executor.shutdown(wait=False) 

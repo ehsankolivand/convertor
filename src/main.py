@@ -1,11 +1,14 @@
+"""Main entry point for the PDF to Markdown Converter."""
+import sys
 import tkinter as tk
-from src.ui import PdfMarkdownApp
+
+from .ui import PdfMarkdownApp
 
 def main():
-    """Main entry point for the PDF to Markdown converter application."""
+    """Run the PDF to Markdown Converter application."""
     root = tk.Tk()
     app = PdfMarkdownApp(root)
     root.mainloop()
 
 if __name__ == "__main__":
-    main() 
+    sys.exit(main()) 

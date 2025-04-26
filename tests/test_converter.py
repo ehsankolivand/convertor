@@ -24,10 +24,8 @@ def test_invalid_pdf(tmp_path):
     with pytest.raises(ConversionError):
         convert_pdf_to_markdown(str(pdf_path))
 
-@pytest.mark.skip(reason="Requires a valid PDF file for testing")
 def test_successful_conversion():
-    # This test requires a valid PDF file
-    # You would need to add a test PDF file to the tests/data directory
+    # This test uses the sample PDF file in tests/data directory
     pdf_path = Path("tests/data/sample.pdf")
     result = convert_pdf_to_markdown(str(pdf_path))
     assert result

@@ -27,6 +27,9 @@ pdf2md = "src.main:main"
 Homepage = "https://github.com/yourusername/pdf2md"
 Repository = "https://github.com/yourusername/pdf2md.git"
 
+[tool.hatch.build.targets.wheel]
+packages = ["src"]
+
 [tool.black]
 line-length = 88
 target-version = ["py38"]
